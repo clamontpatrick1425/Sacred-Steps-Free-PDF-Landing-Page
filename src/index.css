@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-cinzel: "Cinzel", "Cormorant Garamond", serif;
+  --font-cormorant: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-script: "Caveat", cursive;
+
+  --color-sand: #F9F6F0;
+  --color-sand-light: #FCFAF6;
+  --color-sand-card: #FFFFFF;
+  --color-sand-muted: #EFE9DC;
+  --color-sacred: #1C2A39;
+  --color-sacred-light: #2D4156;
+  --color-sacred-dark: #131E29;
+  --color-gold: #D4AF37;
+  --color-gold-hover: #BF9C2D;
+  --color-gold-soft: #FAF3E0;
+  --color-sage: #7A8B7B;
+  --color-sage-light: #95A696;
+  --color-sage-soft: #EEF2EE;
+  --color-offblack: #2B2B2B;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #F9F6F0;
+  color: #1C2A39;
+  overflow-x: hidden;
+}
+
+/* Custom delicate serif styling */
+.font-cinzel {
+  font-family: var(--font-cinzel);
+}
+
+.font-cormorant {
+  font-family: var(--font-cormorant);
+}
+
+.font-script {
+  font-family: var(--font-script);
+}
+
+/* Subtle dawn gradient */
+.bg-dawn-gradient {
+  background: linear-gradient(180deg, #F9F6F0 0%, #FAF5EA 50%, #F9F6F0 100%);
+}
+
+.bg-sacred-gradient {
+  background: linear-gradient(135deg, #1C2A39 0%, #15222E 100%);
+}

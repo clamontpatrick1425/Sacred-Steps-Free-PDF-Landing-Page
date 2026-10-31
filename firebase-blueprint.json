@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "Subscriber": {
+      "title": "Subscriber",
+      "description": "Sacred Steps 7-Day Starter Kit subscriber and VIP waitlist opt-in record.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Subscriber first name or full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 150,
+          "description": "Validated email address."
+        },
+        "isVipWaitlist": {
+          "type": "boolean",
+          "description": "Opt-in confirmation for the VIP waitlist launch."
+        },
+        "selectedFormats": {
+          "type": "array",
+          "description": "Preferred journal/book formats (7x9 KDP, Spiral Bound, eBook PDF, Audiobook)."
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Form origin: hero_starter_kit or contact_panel."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp of subscriber opt-in."
+        }
+      },
+      "required": ["name", "email", "isVipWaitlist"]
+    }
+  },
+  "firestore": {
+    "/subscribers/{subscriberId}": {
+      "schema": {
+        "$ref": "#/entities/Subscriber"
+      },
+      "description": "Stores subscriber names, emails, and VIP waitlist format preferences."
+    }
+  }
+}
