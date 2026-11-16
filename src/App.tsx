@@ -8,10 +8,10 @@ import { FaqPanel } from './components/FaqPanel';
 import { Footer } from './components/Footer';
 import { GroundingDrawer } from './components/GroundingDrawer';
 import { StarterKitModal } from './components/StarterKitModal';
-import { 
-  ChevronLeft, ChevronRight, MoveHorizontal, Compass, 
-  Sparkles, Layers, BookOpen, ShieldCheck 
-} from 'lucide-react';
+import { CoreSampleModal } from './components/CoreSampleModal';
+import { AdminDashboardModal } from './components/AdminDashboardModal';
+import { LegalModal, type LegalDocType } from './components/LegalModal';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { testFirestoreConnection } from './lib/firebase';
 
 const TOTAL_PANELS = 5;
@@ -22,13 +22,30 @@ export default function App() {
   const [isHorizontalMode, setIsHorizontalMode] = useState(true);
   const [isGroundingOpen, setIsGroundingOpen] = useState(false);
   const [isStarterKitModalOpen, setIsStarterKitModalOpen] = useState(false);
+  const [isCorePreviewOpen, setIsCorePreviewOpen] = useState(false);
+  const [selectedModalDay, setSelectedModalDay] = useState(0);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<LegalDocType>(null);
   const [subscriberName, setSubscriberName] = useState('Friend');
   const [isVipWaitlist, setIsVipWaitlist] = useState(true);
   const horizontalStripRef = useRef<HTMLDivElement>(null);
 
-  // Validate connection to Firestore on initial boot
+  const anyModalOpen =
+    isGroundingOpen ||
+    isStarterKitModalOpen ||
+    isCorePreviewOpen ||
+    isAdminOpen ||
+    Boolean(legalDoc);
+
+  // Validate connection to Firestore on initial boot and support ?admin=1 / #admin shortcut
   useEffect(() => {
     testFirestoreConnection();
+    if (
+      window.location.hash === '#admin' ||
+      new URLSearchParams(window.location.search).has('admin')
+    ) {
+      setIsAdminOpen(true);
+    }
   }, []);
 
   // Sync window scroll to horizontal transformation
@@ -63,12 +80,39 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isHorizontalMode]);
 
+  // Sync active section highlight when scrolling in Vertical Mode
+  useEffect(() => {
+    if (isHorizontalMode) return;
+    const panelIds = ['home', 'method', 'about', 'library', 'faq'];
+    const elements = panelIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible.length > 0) {
+          const idx = panelIds.indexOf(visible[0].target.id);
+          if (idx !== -1) setCurrentPanel(idx);
+        }
+      },
+      { threshold: [0.25, 0.5] }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [isHorizontalMode]);
+
   // Keyboard navigation for horizontal panels (ArrowLeft / ArrowRight)
   useEffect(() => {
-    if (!isHorizontalMode) return;
+    if (!isHorizontalMode || anyModalOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['input', 'textarea'].includes((e.target as HTMLElement)?.tagName?.toLowerCase())) {
+      if (['input', 'textarea', 'select'].includes((e.target as HTMLElement)?.tagName?.toLowerCase())) {
         return;
       }
       if (e.key === 'ArrowRight') {
@@ -80,7 +124,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPanel, isHorizontalMode]);
+  }, [currentPanel, isHorizontalMode, anyModalOpen]);
 
   const navigateToPanel = (index: number) => {
     if (isHorizontalMode) {
@@ -101,13 +145,15 @@ export default function App() {
     }
   };
 
-  const handleFormSuccess = (name: string, isVip: boolean, formats?: string[]) => {
+  const handleFormSuccess = (name: string, isVip: boolean) => {
     setSubscriberName(name || 'Friend');
     setIsVipWaitlist(isVip);
+    setSelectedModalDay(0);
     setIsStarterKitModalOpen(true);
   };
 
-  const handleOpenDayModal = (dayIndex?: number) => {
+  const handleOpenDayModal = (dayIndex = 0) => {
+    setSelectedModalDay(dayIndex);
     setIsStarterKitModalOpen(true);
   };
 
@@ -156,6 +202,7 @@ export default function App() {
                 <HeroSection
                   onFormSuccess={handleFormSuccess}
                   onOpenSampleDay1={() => handleOpenDayModal(0)}
+                  onOpenLegal={(docType) => setLegalDoc(docType)}
                 />
               </section>
 
@@ -194,6 +241,7 @@ export default function App() {
                       if (el) el.focus();
                     }, 400);
                   }}
+                  onOpenCorePreview={() => setIsCorePreviewOpen(true)}
                 />
               </section>
 
@@ -206,7 +254,11 @@ export default function App() {
                 <div className="flex-1 py-4 sm:py-8">
                   <FaqPanel />
                 </div>
-                <Footer onOpenGrounding={() => setIsGroundingOpen(true)} />
+                <Footer
+                  onOpenGrounding={() => setIsGroundingOpen(true)}
+                  onOpenAdmin={() => setIsAdminOpen(true)}
+                  onOpenLegal={(docType) => setLegalDoc(docType)}
+                />
               </section>
             </div>
 
@@ -269,6 +321,7 @@ export default function App() {
             <HeroSection
               onFormSuccess={handleFormSuccess}
               onOpenSampleDay1={() => handleOpenDayModal(0)}
+              onOpenLegal={(docType) => setLegalDoc(docType)}
             />
           </div>
           <div id="method">
@@ -295,12 +348,17 @@ export default function App() {
                   }, 400);
                 }
               }}
+              onOpenCorePreview={() => setIsCorePreviewOpen(true)}
             />
           </div>
           <div id="faq">
             <FaqPanel />
           </div>
-          <Footer onOpenGrounding={() => setIsGroundingOpen(true)} />
+          <Footer
+            onOpenGrounding={() => setIsGroundingOpen(true)}
+            onOpenAdmin={() => setIsAdminOpen(true)}
+            onOpenLegal={(docType) => setLegalDoc(docType)}
+          />
         </main>
       )}
 
@@ -333,6 +391,35 @@ export default function App() {
         onClose={() => setIsStarterKitModalOpen(false)}
         subscriberName={subscriberName}
         isVipWaitlist={isVipWaitlist}
+        initialDayIndex={selectedModalDay}
+      />
+
+      <CoreSampleModal
+        isOpen={isCorePreviewOpen}
+        onClose={() => setIsCorePreviewOpen(false)}
+        onJoinWaitlist={() => {
+          if (isHorizontalMode) {
+            navigateToPanel(0);
+          } else {
+            const el = document.getElementById('email-capture');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }
+          setTimeout(() => {
+            const input = document.getElementById('first-name');
+            if (input) input.focus();
+          }, 400);
+        }}
+      />
+
+      <AdminDashboardModal
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
+      />
+
+      <LegalModal
+        docType={legalDoc}
+        onClose={() => setLegalDoc(null)}
+        onSwitchDoc={(docType) => setLegalDoc(docType)}
       />
     </div>
   );

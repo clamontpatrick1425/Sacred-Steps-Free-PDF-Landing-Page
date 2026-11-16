@@ -33,19 +33,27 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-6 h-18">
           
-          {/* Zone 1: Wordmark */}
-          <div className="flex items-center gap-3 shrink-0">
-            <a
-              href="#home"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigateToPanel(0);
-              }}
-              className="text-base sm:text-lg md:text-xl font-cinzel font-bold text-white tracking-wide whitespace-nowrap"
-            >
+          {/* Zone 1: Logo Emblem & Wordmark */}
+          <a
+            href="#home"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigateToPanel(0);
+            }}
+            className="flex items-center gap-3 shrink-0 group focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#D4AF37] rounded-xl"
+          >
+            <span className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden bg-[#FAF5EA] border border-[#D4AF37]/60 shadow-xs shrink-0 flex items-center justify-center p-0.5 transition-transform duration-200 group-hover:scale-105">
+              <img
+                src="/assets/aistudio/sacred_steps_main_logo_262a0f17.png"
+                alt="Sacred Steps to Redemption logo"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-contain rounded-lg"
+              />
+            </span>
+            <span className="text-base sm:text-lg md:text-xl font-cinzel font-bold text-white tracking-wide whitespace-nowrap group-hover:text-[#FAF3E0] transition-colors">
               Sacred Steps to Redemption
-            </a>
-          </div>
+            </span>
+          </a>
 
           {/* Zone 2: 5 Concise Nav Links with Active Indicator */}
           <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold uppercase tracking-wider text-white/80">

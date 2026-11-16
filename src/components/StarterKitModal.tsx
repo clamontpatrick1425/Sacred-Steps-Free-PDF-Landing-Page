@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, CheckCircle2, Download, BookOpen, ChevronRight, ChevronLeft, 
-  ExternalLink, CheckSquare, Square, PenTool, ShieldAlert, Sparkles, Heart
+  ExternalLink, CheckSquare, Square, PenTool, ShieldAlert, Sparkles, Heart,
+  Copy, Check, Volume2, VolumeX
 } from 'lucide-react';
+import {
+  PDF_ASSET_PATH,
+  PDF_DOWNLOAD_FILENAME,
+  downloadOfficialStarterKitPdf,
+} from '../lib/pdf';
+import { useSacredProgress } from '../hooks/useSacredProgress';
 
 interface StarterKitModalProps {
   isOpen: boolean;
   onClose: () => void;
   subscriberName?: string;
   isVipWaitlist?: boolean;
+  initialDayIndex?: number;
 }
 
-export const PDF_ASSET_PATH = "/assets/aistudio/7_Days_to_a_Renewed_Mind_Sacred_Steps_Affirmations_Starter_Kit_13153c8b.pdf";
+export { PDF_ASSET_PATH };
 
 export const starterKitDays = [
   {
@@ -98,28 +106,79 @@ export const StarterKitModal: React.FC<StarterKitModalProps> = ({
   onClose,
   subscriberName = "Friend",
   isVipWaitlist = true,
+  initialDayIndex = 0,
 }) => {
   const [activeTab, setActiveTab] = useState<'reader' | 'checklist' | 'pdf'>('reader');
-  const [activeDayIndex, setActiveDayIndex] = useState(0);
-  const [userJournalNotes, setUserJournalNotes] = useState<{ [day: number]: string }>({});
-  const [checklistItems, setChecklistItems] = useState<{ [key: string]: boolean }>({
-    daily_read: false,
-    daily_speak: false,
-    daily_step: false,
-    mind_voice: false,
-    mind_truth: false,
-    mind_journal: false,
-    comm_connect: false,
-    comm_share: false,
-    comm_witness: false,
-  });
+  const [activeDayIndex, setActiveDayIndex] = useState(initialDayIndex);
+  const [copiedAffirmation, setCopiedAffirmation] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const {
+    notes: userJournalNotes,
+    updateNote,
+    checklist: checklistItems,
+    toggleChecklistItem: toggleCheck,
+    completedDays,
+    toggleDayComplete,
+  } = useSacredProgress();
+
+  // Sync modal day when opened from StepMethodSection day cards
+  useEffect(() => {
+    if (isOpen) {
+      const clamped = Math.max(0, Math.min(starterKitDays.length - 1, initialDayIndex));
+      setActiveDayIndex(clamped);
+      setActiveTab('reader');
+    }
+  }, [isOpen, initialDayIndex]);
+
+  // Stop speech synthesis on close or day change
+  useEffect(() => {
+    if (!isOpen && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, [isOpen, activeDayIndex]);
+
+  // Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   const current = starterKitDays[activeDayIndex];
+  const isDayComplete = completedDays.includes(current.day);
 
-  const toggleCheck = (id: string) => {
-    setChecklistItems((prev) => ({ ...prev, [id]: !prev[id] }));
+  const handleCopyAffirmation = async () => {
+    try {
+      await navigator.clipboard.writeText(`"${current.embrace}" — ${current.reference}`);
+      setCopiedAffirmation(true);
+      window.setTimeout(() => setCopiedAffirmation(false), 2000);
+    } catch {
+      // Ignore clipboard failure
+    }
+  };
+
+  const handleToggleSpeak = () => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(current.embrace);
+    utterance.rate = 0.88;
+    utterance.pitch = 0.98;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
   };
 
   return (
@@ -127,6 +186,9 @@ export const StarterKitModal: React.FC<StarterKitModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="kit-modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-[#1C2A39]/75 backdrop-blur-md overflow-y-auto"
     >
       <div className="relative w-full max-w-4xl bg-[#F9F6F0] rounded-2xl shadow-2xl border border-[#D4AF37]/40 overflow-hidden my-auto flex flex-col max-h-[92vh]">
@@ -166,8 +228,9 @@ export const StarterKitModal: React.FC<StarterKitModalProps> = ({
             {/* Direct Official PDF Download Button */}
             <a
               href={PDF_ASSET_PATH}
-              download="7_Days_to_a_Renewed_Mind_Sacred_Steps_Starter_Kit.pdf"
-              className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#D4AF37] hover:bg-[#BF9C2D] text-[#1C2A39] font-bold text-xs transition-colors shadow-xs"
+              download={PDF_DOWNLOAD_FILENAME}
+              onClick={downloadOfficialStarterKitPdf}
+              className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#D4AF37] hover:bg-[#BF9C2D] text-[#1C2A39] font-bold text-xs transition-colors shadow-xs cursor-pointer"
               title="Download the official PDF book"
             >
               <Download className="w-3.5 h-3.5" />
@@ -240,33 +303,56 @@ export const StarterKitModal: React.FC<StarterKitModalProps> = ({
             {/* Day Selector Navigation */}
             <div className="px-5 sm:px-7 pt-4 pb-2 bg-white/40 border-b border-[#1C2A39]/10 shrink-0">
               <div className="flex items-center gap-1.5 overflow-x-auto pb-2">
-                {starterKitDays.map((d, index) => (
-                  <button
-                    key={d.day}
-                    onClick={() => setActiveDayIndex(index)}
-                    className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all cursor-pointer ${
-                      activeDayIndex === index
-                        ? 'bg-[#1C2A39] text-[#F9F6F0] shadow-sm font-semibold'
-                        : 'bg-white text-[#1C2A39]/80 hover:bg-[#FAF5EA] border border-[#1C2A39]/10'
-                    }`}
-                  >
-                    Day {d.day}: {d.title.split(' ')[0]}
-                  </button>
-                ))}
+                {starterKitDays.map((d, index) => {
+                  const isCompleted = completedDays.includes(d.day);
+                  return (
+                    <button
+                      key={d.day}
+                      onClick={() => setActiveDayIndex(index)}
+                      className={`px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                        activeDayIndex === index
+                          ? 'bg-[#1C2A39] text-[#F9F6F0] shadow-sm font-semibold'
+                          : isCompleted
+                          ? 'bg-[#EEF2EE] text-[#1C2A39] border border-[#7A8B7B]/40 font-medium'
+                          : 'bg-white text-[#1C2A39]/80 hover:bg-[#FAF5EA] border border-[#1C2A39]/10'
+                      }`}
+                    >
+                      {isCompleted && (
+                        <Check className={`w-3 h-3 ${activeDayIndex === index ? 'text-[#D4AF37]' : 'text-[#7A8B7B]'}`} />
+                      )}
+                      <span>Day {d.day}: {d.title.split(' ')[0]}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Main Daily Content (Matches Page 6-13 of PDF exactly) */}
             <div className="p-5 sm:p-8 space-y-6 flex-1">
-              <div>
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#7A8B7B]">
-                  <span>DAY {current.day}</span>
-                  <span>·</span>
-                  <span>Week 1: {current.theme}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#7A8B7B]">
+                    <span>DAY {current.day}</span>
+                    <span>·</span>
+                    <span>Week 1: {current.theme}</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#1C2A39] mt-1">
+                    {current.title}
+                  </h3>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-serif font-bold text-[#1C2A39] mt-1">
-                  {current.title}
-                </h3>
+
+                <button
+                  type="button"
+                  onClick={() => toggleDayComplete(current.day)}
+                  className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all self-start cursor-pointer ${
+                    isDayComplete
+                      ? 'bg-[#7A8B7B] text-white shadow-xs'
+                      : 'bg-white border border-[#1C2A39]/15 text-[#1C2A39] hover:border-[#D4AF37]'
+                  }`}
+                >
+                  <CheckCircle2 className={`w-4 h-4 ${isDayComplete ? 'text-white' : 'text-[#D4AF37]'}`} />
+                  <span>{isDayComplete ? 'Completed Today' : 'Mark Day Complete'}</span>
+                </button>
               </div>
 
               {/* S.T.E.P. Pillars with Exact PDF Styling */}
@@ -306,13 +392,55 @@ export const StarterKitModal: React.FC<StarterKitModalProps> = ({
 
                 {/* E — EMBRACE (say it out loud) */}
                 <div className="p-4 sm:p-5 rounded-xl bg-[#FAF3E0] border border-[#D4AF37]/50 shadow-xs">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-6 h-6 rounded bg-[#D4AF37] text-[#1C2A39] flex items-center justify-center text-xs font-bold font-serif">
-                      E
-                    </span>
-                    <span className="text-xs font-bold tracking-wider uppercase text-[#1C2A39]">
-                      EMBRACE (say it out loud)
-                    </span>
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded bg-[#D4AF37] text-[#1C2A39] flex items-center justify-center text-xs font-bold font-serif">
+                        E
+                      </span>
+                      <span className="text-xs font-bold tracking-wider uppercase text-[#1C2A39]">
+                        EMBRACE (say it out loud)
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {typeof window !== 'undefined' && 'speechSynthesis' in window && (
+                        <button
+                          type="button"
+                          onClick={handleToggleSpeak}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-[#D4AF37]/40 text-[11px] font-semibold text-[#1C2A39] transition-colors cursor-pointer"
+                          title={isSpeaking ? 'Stop audio reading' : 'Listen to affirmation'}
+                        >
+                          {isSpeaking ? (
+                            <>
+                              <VolumeX className="w-3.5 h-3.5 text-[#D4AF37]" />
+                              <span>Stop</span>
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-3.5 h-3.5 text-[#D4AF37]" />
+                              <span>Listen</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleCopyAffirmation}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/80 hover:bg-white border border-[#D4AF37]/40 text-[11px] font-semibold text-[#1C2A39] transition-colors cursor-pointer"
+                        title="Copy affirmation to clipboard"
+                      >
+                        {copiedAffirmation ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-[#7A8B7B]" />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-[#7A8B7B]" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <p className="font-serif italic text-base sm:text-lg text-[#1C2A39] leading-relaxed font-bold">
                     &ldquo;{current.embrace}&rdquo;
@@ -350,15 +478,13 @@ export const StarterKitModal: React.FC<StarterKitModalProps> = ({
                   <textarea
                     rows={3}
                     value={userJournalNotes[current.day] || ''}
-                    onChange={(e) =>
-                      setUserJournalNotes((prev) => ({ ...prev, [current.day]: e.target.value }))
-                    }
+                    onChange={(e) => updateNote(current.day, e.target.value)}
                     placeholder="Take a deep breath and write freely..."
                     className="w-full p-3 rounded-lg border border-[#1C2A39]/15 bg-white text-sm text-[#1C2A39] placeholder:text-[#1C2A39]/40 focus:outline-hidden focus:ring-2 focus:ring-[#D4AF37]"
                   />
                   {userJournalNotes[current.day] && (
                     <span className="text-[11px] text-[#7A8B7B] mt-1 block">
-                      Saved locally in your heart space.
+                      Saved privately on this device.
                     </span>
                   )}
                 </div>
@@ -626,8 +752,9 @@ export const StarterKitModal: React.FC<StarterKitModalProps> = ({
           <span>&ldquo;God is not finished writing your story.&rdquo; — C. Lamont Patrick</span>
           <a
             href={PDF_ASSET_PATH}
-            download="7_Days_to_a_Renewed_Mind_Sacred_Steps_Starter_Kit.pdf"
-            className="inline-flex items-center gap-1.5 text-[#D4AF37] hover:underline font-semibold"
+            download={PDF_DOWNLOAD_FILENAME}
+            onClick={downloadOfficialStarterKitPdf}
+            className="inline-flex items-center gap-1.5 text-[#D4AF37] hover:underline font-semibold cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Download 16-Page Starter Kit PDF</span>

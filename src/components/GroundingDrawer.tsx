@@ -1,14 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, X, Wind, Shield, Phone, Sparkles } from 'lucide-react';
+import { X, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface GroundingDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const groundingAnchors = [
+  {
+    verse: '“Be still, and know that I am God.”',
+    reference: 'Psalm 46:10',
+    encouragement: 'The storm is outside. Christ is within. You are held, forgiven, and never alone.',
+  },
+  {
+    verse: '“Fear not: for I have redeemed thee, I have called thee by thy name; thou art mine.”',
+    reference: 'Isaiah 43:1 (KJV)',
+    encouragement: 'God knows your name — not just your record. Nothing in your past changes whose you are.',
+  },
+  {
+    verse: '“Casting all your care upon him; for he careth for you.”',
+    reference: '1 Peter 5:7 (KJV)',
+    encouragement: 'You were never meant to carry this weight by willpower alone. Hand this minute to Him.',
+  },
+];
+
 export const GroundingDrawer: React.FC<GroundingDrawerProps> = ({ isOpen, onClose }) => {
   const [breathePhase, setBreathePhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [counter, setCounter] = useState(4);
+  const [anchorIndex, setAnchorIndex] = useState(0);
 
   // Gentle 4-4-6 breathing cycle for nervous system regulation
   useEffect(() => {
@@ -35,13 +54,27 @@ export const GroundingDrawer: React.FC<GroundingDrawerProps> = ({ isOpen, onClos
     return () => clearInterval(timer);
   }, [isOpen, breathePhase]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
+
+  const activeAnchor = groundingAnchors[anchorIndex];
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="grounding-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1C2A39]/60 backdrop-blur-sm transition-opacity duration-300"
     >
       <div 
@@ -103,17 +136,40 @@ export const GroundingDrawer: React.FC<GroundingDrawerProps> = ({ isOpen, onClos
           </p>
         </div>
 
-        {/* Scripture Anchor */}
-        <div className="my-5 p-4 rounded-xl bg-white/80 border border-[#D4AF37]/25 text-center">
-          <p className="font-serif italic text-base sm:text-lg text-[#1C2A39]">
-            &ldquo;Be still, and know that I am God.&rdquo;
+        {/* Scripture Anchor with Gentle Cycling */}
+        <div className="my-5 p-4 rounded-xl bg-white/85 border border-[#D4AF37]/30 text-center space-y-2">
+          <p className="font-serif italic text-base sm:text-lg text-[#1C2A39] leading-relaxed">
+            {activeAnchor.verse}
           </p>
-          <span className="text-xs font-semibold text-[#7A8B7B] tracking-wider uppercase mt-1 block">
-            Psalm 46:10
+          <span className="text-xs font-semibold text-[#7A8B7B] tracking-wider uppercase block">
+            {activeAnchor.reference}
           </span>
-          <p className="text-xs text-[#2B2B2B]/75 mt-2">
-            The storm is outside. Christ is within. You are held, forgiven, and never alone.
+          <p className="text-xs text-[#2B2B2B]/75">
+            {activeAnchor.encouragement}
           </p>
+          <div className="pt-2 flex items-center justify-center gap-3 text-[11px] text-[#7A8B7B]">
+            <button
+              type="button"
+              onClick={() =>
+                setAnchorIndex((prev) => (prev - 1 + groundingAnchors.length) % groundingAnchors.length)
+              }
+              aria-label="Previous scripture anchor"
+              className="p-1 rounded-full hover:bg-[#1C2A39]/5 text-[#1C2A39]/70 cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="font-medium">
+              Anchor {anchorIndex + 1} of {groundingAnchors.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => setAnchorIndex((prev) => (prev + 1) % groundingAnchors.length)}
+              aria-label="Next scripture anchor"
+              className="p-1 rounded-full hover:bg-[#1C2A39]/5 text-[#1C2A39]/70 cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Need to talk to someone */}

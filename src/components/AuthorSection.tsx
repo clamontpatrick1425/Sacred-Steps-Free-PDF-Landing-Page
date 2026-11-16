@@ -22,18 +22,15 @@ export const AuthorSection: React.FC = () => {
               {/* Author Card Container */}
               <div className="relative rounded-2xl bg-white border border-[#D4AF37]/40 p-6 sm:p-7 shadow-xl space-y-5 text-center">
                 
-                {/* Author Avatar with Gentle Natural Light Styling */}
-                <div className="relative w-36 h-36 mx-auto rounded-full p-1 bg-gradient-to-b from-[#D4AF37] to-[#1C2A39]">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-[#1C2A39] flex flex-col items-center justify-center text-center p-3 relative shadow-inner">
-                    {/* Artistic initials / monogram emblem */}
-                    <span className="font-cinzel text-3xl font-bold text-[#D4AF37] tracking-widest">
-                      CLP
-                    </span>
-                    <span className="text-[10px] uppercase font-sans text-white/80 tracking-widest mt-1">
-                      C. Lamont Patrick
-                    </span>
-                    {/* Subtle decorative cross star */}
-                    <div className="absolute top-2 w-1.5 h-1.5 bg-[#D4AF37] rounded-full opacity-60" />
+                {/* Author Portrait framed to match the arched silhouette */}
+                <div className="relative w-44 sm:w-48 aspect-[3/4] mx-auto rounded-t-full rounded-b-2xl p-1 bg-gradient-to-b from-[#D4AF37] to-[#1C2A39]/85 shadow-md">
+                  <div className="w-full h-full rounded-t-full rounded-b-[13px] overflow-hidden bg-[#F9F6F0]">
+                    <img
+                      src="/assets/aistudio/image_c95377dc.png"
+                      alt="Portrait of author C. Lamont Patrick"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover object-top"
+                    />
                   </div>
                 </div>
 

@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
-import { Youtube, Music, Globe, Shield, Heart, X, BookOpen } from 'lucide-react';
+import React from 'react';
+import { Youtube, Music, Users, Heart } from 'lucide-react';
+import type { LegalDocType } from './LegalModal';
 
 interface FooterProps {
   onOpenGrounding: () => void;
+  onOpenAdmin?: () => void;
+  onOpenLegal?: (docType: Exclude<LegalDocType, null>) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenGrounding }) => {
-  const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
+export const Footer: React.FC<FooterProps> = ({
+  onOpenGrounding,
+  onOpenAdmin,
+  onOpenLegal,
+}) => {
 
   return (
     <footer className="bg-[#1C2A39] text-[#F9F6F0] pt-16 pb-12 border-t border-[#D4AF37]/30">
@@ -38,19 +44,19 @@ export const Footer: React.FC<FooterProps> = ({ onOpenGrounding }) => {
                   rel="noreferrer"
                   className="hover:text-[#D4AF37] transition-colors inline-flex items-center gap-2"
                 >
-                  <Youtube className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Sacred Steps YouTube Channel</span>
+                  <Youtube className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                  <span>Sacred Steps to Redemption YouTube Channel</span>
                 </a>
               </li>
               <li>
                 <a
-                  href="https://spotify.com"
+                  href="https://suno.com/playlist/42ef321c-ea05-4310-9465-6efe868510cc"
                   target="_blank"
                   rel="noreferrer"
                   className="hover:text-[#D4AF37] transition-colors inline-flex items-center gap-2"
                 >
-                  <Music className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Spoken Word &amp; Guided Audio on Spotify</span>
+                  <Music className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                  <span>&ldquo;Sacred Steps to Redemption Melodies&rdquo; on Suno</span>
                 </a>
               </li>
             </ul>
@@ -64,19 +70,22 @@ export const Footer: React.FC<FooterProps> = ({ onOpenGrounding }) => {
             <ul className="space-y-2 text-sm text-white/80">
               <li>
                 <a
-                  href="#hero"
+                  href="https://www.facebook.com/groups/sacredstepstoredemption/"
+                  target="_blank"
+                  rel="noreferrer"
                   className="hover:text-[#D4AF37] transition-colors inline-flex items-center gap-2"
                 >
-                  <Globe className="w-4 h-4 text-[#D4AF37]" />
-                  <span>Official Ministry Website</span>
+                  <Users className="w-4 h-4 text-[#D4AF37] shrink-0" />
+                  <span>Facebook Group: &ldquo;Sacred Steps to Redemption&rdquo;</span>
                 </a>
               </li>
               <li>
                 <button
+                  type="button"
                   onClick={onOpenGrounding}
-                  className="hover:text-[#D4AF37] transition-colors inline-flex items-center gap-2 text-left"
+                  className="hover:text-[#D4AF37] transition-colors inline-flex items-center gap-2 text-left cursor-pointer"
                 >
-                  <Heart className="w-4 h-4 text-[#D4AF37]" />
+                  <Heart className="w-4 h-4 text-[#D4AF37] shrink-0" />
                   <span>Emergency Grounding Anchor (24/7)</span>
                 </button>
               </li>
@@ -109,78 +118,36 @@ export const Footer: React.FC<FooterProps> = ({ onOpenGrounding }) => {
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setLegalModal('privacy')}
-              className="hover:text-[#D4AF37] transition-colors underline underline-offset-2"
+              type="button"
+              onClick={() => onOpenLegal?.('privacy')}
+              className="hover:text-[#D4AF37] transition-colors underline underline-offset-2 cursor-pointer"
             >
               Privacy Policy
             </button>
             <span>·</span>
             <button
-              onClick={() => setLegalModal('terms')}
-              className="hover:text-[#D4AF37] transition-colors underline underline-offset-2"
+              type="button"
+              onClick={() => onOpenLegal?.('terms')}
+              className="hover:text-[#D4AF37] transition-colors underline underline-offset-2 cursor-pointer"
             >
               Terms of Service
             </button>
+            {onOpenAdmin && (
+              <>
+                <span>·</span>
+                <button
+                  type="button"
+                  onClick={onOpenAdmin}
+                  className="hover:text-[#D4AF37] transition-colors underline underline-offset-2 cursor-pointer"
+                >
+                  Author Portal
+                </button>
+              </>
+            )}
           </div>
         </div>
 
       </div>
-
-      {/* Legal Information Modal */}
-      {legalModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-        >
-          <div className="bg-[#F9F6F0] text-[#1C2A39] rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#D4AF37]/30 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-[#1C2A39]/10">
-              <h4 className="text-xl font-serif font-bold text-[#1C2A39]">
-                {legalModal === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}
-              </h4>
-              <button
-                onClick={() => setLegalModal(null)}
-                className="p-1 rounded text-[#1C2A39]/70 hover:text-[#1C2A39]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="py-4 space-y-3 text-xs sm:text-sm text-[#2B2B2B]/85 leading-relaxed">
-              {legalModal === 'privacy' ? (
-                <>
-                  <p>
-                    Your privacy and dignity in recovery are sacred to us. We will never sell, rent, or trade your contact information to any third party.
-                  </p>
-                  <p>
-                    We collect your email address solely to deliver your requested 7-Day Starter Kit and provide waitlist announcements regarding C. Lamont Patrick&apos;s upcoming books.
-                  </p>
-                  <p>
-                    You can unsubscribe with a single click at the bottom of any email we send, no questions asked.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    By accessing Sacred Steps Daily Grace materials, you agree that this devotional content is designed for spiritual encouragement, meditation, and personal development.
-                  </p>
-                  <p>
-                    All content, including the Sacred S.T.E.P. Method™, text, and workbook exercises, is protected under copyright law by C. Lamont Patrick and Kya Daisy Publishing.
-                  </p>
-                  <p>
-                    This resource is provided in good faith to support your walk with God and your recovery journey.
-                  </p>
-                </>
-              )}
-            </div>
-            <button
-              onClick={() => setLegalModal(null)}
-              className="w-full mt-4 py-2.5 rounded-xl bg-[#1C2A39] text-[#F9F6F0] text-xs font-semibold hover:bg-[#2A3C50]"
-            >
-              Understood
-            </button>
-          </div>
-        </div>
-      )}
     </footer>
   );
 };

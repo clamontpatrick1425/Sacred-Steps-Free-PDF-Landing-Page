@@ -16,6 +16,16 @@ service cloud.firestore {
       return request.resource.data;
     }
 
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email == 'clamontpatrick@gmail.com' &&
+        request.auth.token.email_verified == true;
+    }
+
     function isValidSubscriber(data) {
       return data.keys().hasAll(['name', 'email', 'isVipWaitlist']) &&
         data.keys().hasOnly(['name', 'email', 'isVipWaitlist', 'selectedFormats', 'source', 'createdAt']) &&
@@ -27,16 +37,23 @@ service cloud.firestore {
         data.email.size() <= 150 &&
         data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$') &&
         data.isVipWaitlist is bool &&
-        (!('selectedFormats' in data) || (data.selectedFormats is list && data.selectedFormats.size() <= 10)) &&
+        (!('selectedFormats' in data) || (
+          data.selectedFormats is list &&
+          data.selectedFormats.size() <= 10 &&
+          (data.selectedFormats.size() == 0 || data.selectedFormats[0] is string)
+        )) &&
         (!('source' in data) || (data.source is string && data.source.size() <= 50)) &&
         (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
     }
 
-    // Subscribers collection: Allows creation with strict schema validation
-    // PII Protection: Public listing and reading is strictly forbidden to prevent data scraping
+    // Subscribers collection:
+    // - Public visitors can submit signup forms (validated strictly by isValidSubscriber)
+    // - Only verified admin (clamontpatrick@gmail.com) can read, list, or delete subscriber records
     match /subscribers/{subscriberId} {
       allow create: if isValidId(subscriberId) && isValidSubscriber(incoming());
-      allow read, update, delete: if false;
+      allow get, list: if isAdmin();
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(subscriberId);
     }
   }
 }

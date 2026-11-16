@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { BookOpen, Lightbulb, Heart, Footprints, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Lightbulb, Heart, Footprints, ChevronRight, CheckCircle2, Copy, Check } from 'lucide-react';
 import { starterKitDays } from './StarterKitModal';
+import { useSacredProgress } from '../hooks/useSacredProgress';
 
 interface StepMethodSectionProps {
   onScrollToForm: () => void;
@@ -12,8 +13,21 @@ export const StepMethodSection: React.FC<StepMethodSectionProps> = ({
   onOpenDayModal,
 }) => {
   const [selectedDay, setSelectedDay] = useState(1);
+  const [copiedDay, setCopiedDay] = useState(false);
+  const { completedDays, toggleDayComplete } = useSacredProgress();
 
   const activeDayData = starterKitDays.find((d) => d.day === selectedDay) || starterKitDays[0];
+  const isSelectedComplete = completedDays.includes(activeDayData.day);
+
+  const handleCopyEmbrace = async () => {
+    try {
+      await navigator.clipboard.writeText(`"${activeDayData.embrace}" — ${activeDayData.reference}`);
+      setCopiedDay(true);
+      window.setTimeout(() => setCopiedDay(false), 2000);
+    } catch {
+      // Ignore clipboard failure
+    }
+  };
 
   const pillars = [
     {
@@ -148,31 +162,38 @@ export const StepMethodSection: React.FC<StepMethodSectionProps> = ({
 
           {/* Day selection tabs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 my-6">
-            {starterKitDays.map((d) => (
-              <button
-                key={d.day}
-                onClick={() => setSelectedDay(d.day)}
-                className={`p-3 rounded-xl text-left transition-all cursor-pointer ${
-                  selectedDay === d.day
-                    ? 'bg-[#1C2A39] text-[#F9F6F0] shadow-md ring-2 ring-[#D4AF37]'
-                    : 'bg-[#F9F6F0] text-[#1C2A39] hover:bg-[#EFE9DC]/60 border border-[#1C2A39]/10'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                    selectedDay === d.day ? 'text-[#D4AF37]' : 'text-[#7A8B7B]'
-                  }`}>
-                    Day {d.day}
-                  </span>
-                  {selectedDay === d.day && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
-                  )}
-                </div>
-                <div className="font-serif font-semibold text-xs mt-1 truncate">
-                  {d.title}
-                </div>
-              </button>
-            ))}
+            {starterKitDays.map((d) => {
+              const isDone = completedDays.includes(d.day);
+              return (
+                <button
+                  key={d.day}
+                  onClick={() => setSelectedDay(d.day)}
+                  className={`p-3 rounded-xl text-left transition-all cursor-pointer ${
+                    selectedDay === d.day
+                      ? 'bg-[#1C2A39] text-[#F9F6F0] shadow-md ring-2 ring-[#D4AF37]'
+                      : isDone
+                      ? 'bg-[#EEF2EE] text-[#1C2A39] border border-[#7A8B7B]/40'
+                      : 'bg-[#F9F6F0] text-[#1C2A39] hover:bg-[#EFE9DC]/60 border border-[#1C2A39]/10'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                      selectedDay === d.day ? 'text-[#D4AF37]' : 'text-[#7A8B7B]'
+                    }`}>
+                      Day {d.day}
+                    </span>
+                    {isDone ? (
+                      <Check className={`w-3.5 h-3.5 ${selectedDay === d.day ? 'text-[#D4AF37]' : 'text-[#7A8B7B]'}`} />
+                    ) : selectedDay === d.day ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
+                    ) : null}
+                  </div>
+                  <div className="font-serif font-semibold text-xs mt-1 truncate">
+                    {d.title}
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {/* Selected Day Showcase Card */}
@@ -211,9 +232,28 @@ export const StepMethodSection: React.FC<StepMethodSectionProps> = ({
               </div>
 
               <div className="p-3.5 rounded-lg bg-[#FAF3E0] border border-[#D4AF37]/30">
-                <strong className="text-[11px] uppercase tracking-wider text-[#1C2A39] block mb-1">
-                  ❤️ Affirmation to Embrace:
-                </strong>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <strong className="text-[11px] uppercase tracking-wider text-[#1C2A39] block">
+                    ❤️ Affirmation to Embrace:
+                  </strong>
+                  <button
+                    type="button"
+                    onClick={handleCopyEmbrace}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/80 hover:bg-white border border-[#D4AF37]/40 text-[10px] font-semibold text-[#1C2A39] transition-colors cursor-pointer"
+                  >
+                    {copiedDay ? (
+                      <>
+                        <Check className="w-3 h-3 text-[#7A8B7B]" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-[#7A8B7B]" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
                 <p className="font-serif italic text-[#1C2A39] font-medium">
                   &ldquo;{activeDayData.embrace}&rdquo;
                 </p>
@@ -230,7 +270,24 @@ export const StepMethodSection: React.FC<StepMethodSectionProps> = ({
             </div>
           </div>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => toggleDayComplete(activeDayData.day)}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                isSelectedComplete
+                  ? 'bg-[#7A8B7B] text-white'
+                  : 'bg-[#F9F6F0] border border-[#1C2A39]/15 text-[#1C2A39] hover:border-[#D4AF37]'
+              }`}
+            >
+              <CheckCircle2 className={`w-4 h-4 ${isSelectedComplete ? 'text-white' : 'text-[#D4AF37]'}`} />
+              <span>
+                {isSelectedComplete
+                  ? `Day ${activeDayData.day} Completed (${completedDays.length}/7)`
+                  : `Mark Day ${activeDayData.day} Complete (${completedDays.length}/7)`}
+              </span>
+            </button>
+
             <button
               onClick={onScrollToForm}
               className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#1C2A39] hover:text-[#D4AF37] transition-colors underline underline-offset-4 cursor-pointer"

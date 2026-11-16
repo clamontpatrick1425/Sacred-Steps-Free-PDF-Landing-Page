@@ -1,22 +1,32 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, ArrowRight, BookOpen, ShieldCheck, Check, Heart, Eye, 
-  CheckSquare, Square, CheckCircle2, AlertCircle, Loader2 
+  Sparkles, ArrowRight, BookOpen, ShieldCheck, Check, Heart, 
+  CheckSquare, Square, CheckCircle2, AlertCircle, Loader2, Download 
 } from 'lucide-react';
 import { useEmailValidation } from '../hooks/useEmailValidation';
 import { saveSubscriberToFirestore } from '../lib/firebase';
+import {
+  PDF_ASSET_PATH,
+  PDF_DOWNLOAD_FILENAME,
+  downloadOfficialStarterKitPdf,
+} from '../lib/pdf';
 
 interface HeroSectionProps {
   onFormSuccess: (name: string, isVip: boolean, formats: string[]) => void;
   onOpenSampleDay1: () => void;
+  onOpenLegal?: (docType: 'privacy' | 'terms') => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onFormSuccess, onOpenSampleDay1 }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({
+  onFormSuccess,
+  onOpenSampleDay1,
+  onOpenLegal,
+}) => {
   const [firstName, setFirstName] = useState('');
   const [isVipWaitlist, setIsVipWaitlist] = useState(true);
   const [selectedFormats, setSelectedFormats] = useState<string[]>([
-    'Lay-Flat Spiral Bound',
-    '7x9 Amazon KDP'
+    'Kindle Edition',
+    '6x9 Amazon KDP'
   ]);
   const [nameError, setNameError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -161,7 +171,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFormSuccess, onOpenS
                       Preferences saved: {selectedFormats.join(' · ')}
                     </div>
                   )}
-                  <div className="pt-2">
+                  <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5">
                     <button
                       onClick={onOpenSampleDay1}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1C2A39] text-[#F9F6F0] hover:bg-[#2A3C50] text-xs font-semibold tracking-wide transition-colors cursor-pointer"
@@ -169,6 +179,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFormSuccess, onOpenS
                       <BookOpen className="w-4 h-4 text-[#D4AF37]" />
                       <span>Open Your 7-Day Guide Now</span>
                     </button>
+                    <a
+                      href={PDF_ASSET_PATH}
+                      download={PDF_DOWNLOAD_FILENAME}
+                      onClick={downloadOfficialStarterKitPdf}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#BF9C2D] text-[#1C2A39] text-xs font-bold tracking-wide transition-colors cursor-pointer shadow-xs"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download 16-Page PDF</span>
+                    </a>
                   </div>
                 </div>
               ) : (
@@ -302,8 +321,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFormSuccess, onOpenS
                         </span>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {[
-                            { id: '7x9 Amazon KDP', label: '📖 7x9 Amazon KDP Edition' },
-                            { id: 'Lay-Flat Spiral Bound', label: '🌀 Lay-Flat Spiral Bound' },
+                            { id: '6x9 Amazon KDP', label: '📖 6x9 Amazon KDP Edition' },
+                            { id: 'Kindle Edition', label: '📲 Kindle Edition' },
                             { id: 'Downloadable eBook PDF', label: '📱 Downloadable eBook PDF' },
                             { id: 'Spoken Word Audiobook', label: '🎧 Spoken Word Audiobook' }
                           ].map((item) => (
@@ -352,16 +371,34 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFormSuccess, onOpenS
                     )}
                   </button>
 
-                  {/* Trust markers */}
-                  <div className="pt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-[#2B2B2B]/70 text-center">
+                  {/* Trust markers & Notice at Collection */}
+                  <div className="pt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-[#2B2B2B]/70 text-center">
                     <span className="flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5 text-[#7A8B7B]" />
-                      Zero Spam. Encrypted Grace.
+                      Zero Spam. Never Sold.
                     </span>
                     <span>·</span>
-                    <span>Instant Digital PDF Access</span>
-                    <span>·</span>
-                    <span>Firestore Connected</span>
+                    <span>Instant 16-Page PDF</span>
+                    {onOpenLegal && (
+                      <>
+                        <span>·</span>
+                        <button
+                          type="button"
+                          onClick={() => onOpenLegal('privacy')}
+                          className="underline underline-offset-2 hover:text-[#1C2A39] cursor-pointer"
+                        >
+                          Privacy Policy
+                        </button>
+                        <span>·</span>
+                        <button
+                          type="button"
+                          onClick={() => onOpenLegal('terms')}
+                          className="underline underline-offset-2 hover:text-[#1C2A39] cursor-pointer"
+                        >
+                          Terms
+                        </button>
+                      </>
+                    )}
                   </div>
                 </form>
               )}
@@ -372,94 +409,157 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onFormSuccess, onOpenS
           {/* Right Column: Visual Mockup of Starter Kit & Book (5 cols) */}
           <div className="lg:col-span-5 flex flex-col items-center">
             
-            {/* Elegant Realistic Book/Guide Presentation mirroring the actual PDF Cover */}
+            {/* Elegant Realistic Book/Guide Presentation mirroring Page 1 of the 16-Page Official PDF */}
             <div className="relative w-full max-w-md mx-auto group">
               
               {/* Soft Dawn Shadow */}
-              <div className="absolute -inset-3 bg-gradient-to-r from-[#D4AF37]/25 via-[#7A8B7B]/15 to-[#1C2A39]/20 rounded-3xl blur-xl transition-all duration-500 group-hover:scale-105" />
+              <div className="absolute -inset-3 bg-gradient-to-r from-[#D4AF37]/25 via-[#7A8B7B]/15 to-[#1C2A39]/15 rounded-3xl blur-xl transition-all duration-500 group-hover:scale-105" />
 
-              {/* Physical Book Cover Card — Exact Replica of PDF Page 1 */}
-              <div className="relative rounded-2xl bg-[#1C2A39] text-[#F9F6F0] p-7 sm:p-9 shadow-2xl border-2 border-[#D4AF37]/40 overflow-hidden flex flex-col justify-between min-h-[460px]">
-                
-                {/* Spine subtle shadow effect */}
-                <div className="absolute left-0 top-0 bottom-0 w-3.5 bg-gradient-to-r from-black/50 via-white/10 to-transparent pointer-events-none" />
+              {/* Clickable Front Cover Card — Exact Replica of Official PDF Page 1 */}
+              <a
+                href={PDF_ASSET_PATH}
+                download={PDF_DOWNLOAD_FILENAME}
+                onClick={downloadOfficialStarterKitPdf}
+                title="Click to download the 16-Page Official Sacred Steps Starter Kit PDF"
+                aria-label="Download 7 Days to a Renewed Mind 16-Page Official PDF"
+                className="relative block rounded-2xl bg-white text-[#1C2A39] p-3 sm:p-4 shadow-2xl border border-[#1C2A39]/10 overflow-hidden transition-transform duration-300 group-hover:-translate-y-1 cursor-pointer"
+              >
+                {/* Subtle left book spine shading */}
+                <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-[#1C2A39]/12 via-[#1C2A39]/4 to-transparent pointer-events-none z-10" />
 
-                {/* Top Border Framing Line (from PDF cover) */}
-                <div className="w-full h-px bg-[#D4AF37]/70" />
+                {/* Hover Download Affordance Badge */}
+                <span className="absolute top-5 right-5 z-20 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#1C2A39]/90 text-[#F9F6F0] text-[10px] font-semibold tracking-wide opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
+                  <Download className="w-3 h-3 text-[#D4AF37]" />
+                  <span>Download PDF</span>
+                </span>
 
-                {/* Cover Header and Sunrise Emblem */}
-                <div className="text-center py-4 space-y-3">
-                  <span className="text-[10px] sm:text-[11px] font-semibold tracking-[0.3em] uppercase text-[#D4AF37] block">
-                    SACRED STEPS STARTER KIT
-                  </span>
+                {/* Outer Gold Frame (matching PDF Page 1) */}
+                <div className="rounded-xl border-[1.5px] border-[#D4AF37] p-1">
+                  {/* Inner Gold Frame */}
+                  <div className="rounded-lg border border-[#D4AF37]/65 px-5 sm:px-7 py-6 sm:py-7 flex flex-col items-center justify-between text-center min-h-[450px] bg-gradient-to-b from-white via-[#FFFDF9] to-white">
+                    
+                    {/* Top Section: Sacred Path, Cross & Sunrise Emblem */}
+                    <div className="w-full flex flex-col items-center space-y-2.5">
+                      <div className="w-28 sm:w-32 h-auto">
+                        <svg viewBox="0 0 180 120" fill="none" className="w-full h-auto" aria-hidden="true">
+                          <defs>
+                            <radialGradient id="sacredSunGlow" cx="50%" cy="48%" r="42%">
+                              <stop offset="0%" stopColor="#F5D061" stopOpacity="0.55" />
+                              <stop offset="55%" stopColor="#E9C46A" stopOpacity="0.22" />
+                              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+                            </radialGradient>
+                          </defs>
 
-                  {/* Radiating Sunrise Symbol (from PDF Cover) */}
-                  <div className="flex justify-center pt-1 pb-2">
-                    <svg viewBox="0 0 100 55" fill="none" className="w-24 sm:w-28 h-auto">
-                      {/* Sun arc */}
-                      <path d="M15 50 A 35 35 0 0 1 85 50" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round" />
-                      {/* Sun rays */}
-                      <line x1="50" y1="5" x2="50" y2="15" stroke="#D4AF37" strokeWidth="2.2" strokeLinecap="round" />
-                      <line x1="28" y1="12" x2="34" y2="21" stroke="#D4AF37" strokeWidth="2.2" strokeLinecap="round" />
-                      <line x1="72" y1="12" x2="66" y2="21" stroke="#D4AF37" strokeWidth="2.2" strokeLinecap="round" />
-                      <line x1="12" y1="28" x2="21" y2="33" stroke="#D4AF37" strokeWidth="2.2" strokeLinecap="round" />
-                      <line x1="88" y1="28" x2="79" y2="33" stroke="#D4AF37" strokeWidth="2.2" strokeLinecap="round" />
-                      {/* Horizon line */}
-                      <line x1="5" y1="50" x2="95" y2="50" stroke="#D4AF37" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
-                    </svg>
+                          {/* Soft sun glow */}
+                          <circle cx="90" cy="54" r="46" fill="url(#sacredSunGlow)" />
+
+                          {/* Radiating golden sun rays */}
+                          <g stroke="#D4AF37" strokeWidth="1.6" strokeLinecap="round" opacity="0.85">
+                            <line x1="90" y1="8" x2="90" y2="20" />
+                            <line x1="72" y1="11" x2="76" y2="22" />
+                            <line x1="108" y1="11" x2="104" y2="22" />
+                            <line x1="55" y1="19" x2="64" y2="28" />
+                            <line x1="125" y1="19" x2="116" y2="28" />
+                            <line x1="43" y1="32" x2="54" y2="39" />
+                            <line x1="137" y1="32" x2="126" y2="39" />
+                            <line x1="36" y1="47" x2="48" y2="50" />
+                            <line x1="144" y1="47" x2="132" y2="50" />
+                          </g>
+
+                          {/* Sun dome arc */}
+                          <path
+                            d="M 55 58 A 35 35 0 0 1 125 58"
+                            stroke="#D4AF37"
+                            strokeWidth="1.5"
+                            strokeOpacity="0.65"
+                            fill="none"
+                          />
+
+                          {/* Rolling horizon hills */}
+                          <path
+                            d="M 24 62 Q 55 52 90 59 Q 125 52 156 62"
+                            stroke="#1C2A39"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            fill="none"
+                          />
+
+                          {/* Cross at the crest of the hill */}
+                          <path
+                            d="M 86.5 28 H 93.5 V 37 H 102 V 43.5 H 93.5 V 60 H 86.5 V 43.5 H 78 V 37 H 86.5 Z"
+                            fill="#FFFFFF"
+                            stroke="#1C2A39"
+                            strokeWidth="2"
+                            strokeLinejoin="round"
+                          />
+
+                          {/* Winding Sacred Path leading down from the Cross */}
+                          <path
+                            d="M 88 60 C 80 68, 66 71, 69 82 C 72 93, 108 93, 104 104 C 101 111, 88 114, 78 117"
+                            stroke="#1C2A39"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            fill="none"
+                          />
+                          <path
+                            d="M 92 60 C 90 67, 81 71, 84 79 C 87 86, 124 90, 121 104 C 118 112, 106 115, 97 118"
+                            stroke="#1C2A39"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            fill="none"
+                          />
+                        </svg>
+                      </div>
+
+                      <span className="text-[9px] sm:text-[10px] font-sans font-bold tracking-[0.28em] uppercase text-[#1C2A39] block pt-0.5">
+                        SACRED STEPS STARTER KIT
+                      </span>
+
+                      <h2 className="text-[28px] sm:text-[34px] font-serif font-bold text-[#1C2A39] tracking-tight leading-[1.12]">
+                        7 Days to a<br />Renewed Mind
+                      </h2>
+
+                      {/* Short Gold Accent Rule */}
+                      <div className="w-12 h-0.5 bg-[#D4AF37] mx-auto my-1" />
+
+                      <p className="text-[11px] sm:text-xs font-serif italic text-[#1C2A39]/90 leading-snug max-w-[265px] mx-auto">
+                        The first week of Sacred Steps to Redemption &mdash;<br className="hidden sm:inline" /> Scripture, truth, affirmation, and one small step a day.
+                      </p>
+
+                      {/* Week 1 Pill Badge */}
+                      <div className="pt-1">
+                        <span className="inline-block px-4 py-1.5 rounded-full border border-[#D4AF37]/80 text-[9px] sm:text-[9.5px] font-sans font-bold tracking-[0.2em] uppercase text-[#1C2A39]">
+                          WEEK 1 &bull; I AM CHOSEN
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Author & Publisher Footer (matching PDF Page 1) */}
+                    <div className="w-full space-y-2.5 pt-5">
+                      <div>
+                        <span className="text-xs sm:text-[13px] font-serif font-bold tracking-[0.06em] uppercase text-[#1C2A39] block">
+                          C. LAMONT PATRICK
+                        </span>
+                        <span className="text-[9.5px] sm:text-[10px] font-sans text-[#2B2B2B]/80 block mt-0.5">
+                          Author of Sacred Steps to Redemption: 365 Biblical Affirmations
+                        </span>
+                      </div>
+
+                      <div className="w-36 h-px bg-[#D4AF37]/45 mx-auto" />
+
+                      <div className="space-y-0.5">
+                        <p className="text-[11px] sm:text-xs font-serif italic text-[#1C2A39]">
+                          A Path to Recovery, A Life in Grace.
+                        </p>
+                        <p className="text-[8.5px] sm:text-[9px] font-sans text-[#2B2B2B]/65 leading-tight">
+                          Kya Daisy Publishing &bull; A free gift for subscribers of Sacred Steps to Redemption Affirmations
+                        </p>
+                      </div>
+                    </div>
+
                   </div>
-
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-white tracking-wide leading-tight">
-                    7 Days to a<br />Renewed Mind
-                  </h2>
-
-                  <p className="text-xs sm:text-sm font-serif italic text-white/90 pt-1 tracking-wide">
-                    First 7 Days of Affirmations + Monthly Transformation Checklist
-                  </p>
                 </div>
-
-                {/* Author & Publisher Footer (from PDF cover) */}
-                <div className="space-y-3 pt-4 text-center">
-                  <div>
-                    <span className="text-[11px] font-semibold tracking-widest uppercase text-white/95 block">
-                      C. LAMONT PATRICK
-                    </span>
-                    <span className="text-[10px] font-serif italic text-white/75 block">
-                      Author of Sacred Steps to Redemption: 365 Biblical Affirmations
-                    </span>
-                  </div>
-
-                  {/* Bottom Border Framing Line (from PDF cover) */}
-                  <div className="w-full h-px bg-[#D4AF37]/70" />
-
-                  <div className="text-[9px] sm:text-[10px] text-white/70 tracking-wider">
-                    Kya Daisy Publishing &bull; A Path to Recovery, A Life in Grace.
-                  </div>
-                </div>
-
-                {/* Golden ribbon bookmark at bottom right */}
-                <div className="absolute -bottom-2 right-8 w-4 h-8 bg-[#D4AF37] shadow-md clip-ribbon pointer-events-none" />
-              </div>
-
-              {/* Action Buttons Below Mockup */}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                <button
-                  onClick={onOpenSampleDay1}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#D4AF37]/60 text-xs font-semibold text-[#1C2A39] hover:bg-[#FAF3E0] transition-colors shadow-sm cursor-pointer"
-                >
-                  <Eye className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span>Look Inside Day 1 (1 Peter 2:9)</span>
-                </button>
-
-                <a
-                  href="/assets/aistudio/7_Days_to_a_Renewed_Mind_Sacred_Steps_Affirmations_Starter_Kit_13153c8b.pdf"
-                  download="7_Days_to_a_Renewed_Mind_Sacred_Steps_Starter_Kit.pdf"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#7A8B7B]/15 hover:bg-[#7A8B7B]/25 text-xs font-medium text-[#1C2A39] transition-colors"
-                  title="Direct PDF Download"
-                >
-                  <span>16-Page Official PDF</span>
-                </a>
-              </div>
+              </a>
 
             </div>
 

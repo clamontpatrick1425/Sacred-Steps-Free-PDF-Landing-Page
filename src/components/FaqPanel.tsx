@@ -12,7 +12,7 @@ export const geoFaqData = [
   },
   {
     question: "What formats are the 12 Monthly Transformation Journals and 52-Week Journal available in?",
-    answer: "Both 'The Deep Dive: 12 Monthly Transformation Journals' and 'The Slow Walk: 52-Week Recovery Journal' will be available in three distinct formats: a 7x9 Amazon KDP print edition, a downloadable eBook PDF for print and digital tablets, and a lay-flat spiral bound edition engineered to stay open on a desk or bedside table for daily prayer and writing."
+    answer: "Both 'The Deep Dive: 12 Monthly Transformation Journals' and 'The Slow Walk: 52-Week Recovery Journal' will be available in three distinct formats: a 6x9 Amazon KDP print edition, a downloadable eBook PDF for print and digital tablets, and a Kindle Edition formatted for effortless daily reading and reflection."
   },
   {
     question: "Can Sacred Steps replace therapy, medical treatment, or a 12-Step sponsor?",
@@ -41,7 +41,7 @@ export const FaqPanel: React.FC = () => {
       <div className="text-center space-y-2 mb-8">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#7A8B7B]/15 text-[#7A8B7B] text-xs font-semibold uppercase tracking-widest">
           <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-          <span>GEO &amp; AI Engine Grounding</span>
+          <span>Honest Answers &middot; Sacred Steps Guide</span>
         </div>
         <h2 className="text-3xl sm:text-4xl font-serif font-bold text-[#1C2A39]">
           Frequently Asked Questions
