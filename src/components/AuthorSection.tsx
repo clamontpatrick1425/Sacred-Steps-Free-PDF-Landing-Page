@@ -39,7 +39,7 @@ export const AuthorSection: React.FC = () => {
                     C. Lamont Patrick
                   </h3>
                   <p className="text-xs font-semibold uppercase tracking-wider text-[#7A8B7B]">
-                    Author &amp; Redeemed Friend
+                    Author, USAF Vet &amp; Redeemed Friend
                   </p>
                   <p className="text-xs text-[#2B2B2B]/70 italic font-serif">
                     Sacred Steps to Redemption · Kya Daisy Publishing

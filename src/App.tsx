@@ -11,7 +11,7 @@ import { StarterKitModal } from './components/StarterKitModal';
 import { CoreSampleModal } from './components/CoreSampleModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { LegalModal, type LegalDocType } from './components/LegalModal';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
 import { testFirestoreConnection } from './lib/firebase';
 
 const TOTAL_PANELS = 5;
@@ -20,6 +20,7 @@ export default function App() {
   const [currentPanel, setCurrentPanel] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isHorizontalMode, setIsHorizontalMode] = useState(true);
+  const [isPastFirstVerticalPanel, setIsPastFirstVerticalPanel] = useState(false);
   const [isGroundingOpen, setIsGroundingOpen] = useState(false);
   const [isStarterKitModalOpen, setIsStarterKitModalOpen] = useState(false);
   const [isCorePreviewOpen, setIsCorePreviewOpen] = useState(false);
@@ -29,6 +30,10 @@ export default function App() {
   const [subscriberName, setSubscriberName] = useState('Friend');
   const [isVipWaitlist, setIsVipWaitlist] = useState(true);
   const horizontalStripRef = useRef<HTMLDivElement>(null);
+
+  const showBackToTop = isHorizontalMode
+    ? currentPanel > 0
+    : isPastFirstVerticalPanel || currentPanel > 0;
 
   const anyModalOpen =
     isGroundingOpen ||
@@ -104,7 +109,24 @@ export default function App() {
     );
 
     elements.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+
+    const handleVerticalScroll = () => {
+      const homeEl = document.getElementById('home');
+      if (!homeEl) {
+        setIsPastFirstVerticalPanel(window.scrollY > 400);
+        return;
+      }
+      const threshold = Math.max(240, homeEl.offsetHeight - 140);
+      setIsPastFirstVerticalPanel(window.scrollY > threshold);
+    };
+
+    handleVerticalScroll();
+    window.addEventListener('scroll', handleVerticalScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', handleVerticalScroll);
+    };
   }, [isHorizontalMode]);
 
   // Keyboard navigation for horizontal panels (ArrowLeft / ArrowRight)
@@ -157,6 +179,14 @@ export default function App() {
     setIsStarterKitModalOpen(true);
   };
 
+  const handleBackToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setCurrentPanel(0);
+    if (isHorizontalMode) {
+      document.getElementById('panel-home')?.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F9F6F0] text-[#1C2A39] font-sans antialiased relative selection:bg-[#D4AF37]/30 selection:text-[#1C2A39]">
       
@@ -169,6 +199,9 @@ export default function App() {
         isHorizontalMode={isHorizontalMode}
         onToggleHorizontalMode={() => {
           setIsHorizontalMode(!isHorizontalMode);
+          setScrollProgress(0);
+          setCurrentPanel(0);
+          setIsPastFirstVerticalPanel(false);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
@@ -361,6 +394,30 @@ export default function App() {
           />
         </main>
       )}
+
+      {/* Back to Top Button (Visible only after scrolling past the first panel) */}
+      <div
+        className={`fixed bottom-5 left-5 z-40 transition-all duration-200 ${
+          showBackToTop
+            ? 'opacity-100 translate-y-0'
+            : 'opacity-0 translate-y-3 pointer-events-none'
+        }`}
+        aria-hidden={!showBackToTop}
+      >
+        <button
+          type="button"
+          onClick={handleBackToTop}
+          tabIndex={showBackToTop ? 0 : -1}
+          aria-label="Back to top"
+          title="Back to Top"
+          className="inline-flex items-center gap-2 px-4 py-3 rounded-full bg-white/95 backdrop-blur-md text-[#1C2A39] shadow-lg border border-[#D4AF37]/50 hover:bg-[#FAF3E0] hover:border-[#D4AF37] transition-all hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+        >
+          <ArrowUp className="w-4 h-4 text-[#D4AF37] shrink-0" />
+          <span className="text-xs font-semibold tracking-wide font-sans">
+            Back to Top
+          </span>
+        </button>
+      </div>
 
       {/* 1-Tap Floating SOS Grounding Anchor (Accessible from ANY panel) */}
       <div className="fixed bottom-5 right-5 z-40">
